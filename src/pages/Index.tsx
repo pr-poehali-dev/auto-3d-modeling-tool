@@ -72,6 +72,25 @@ export default function Index() {
                 <Icon name="PlayCircle" size={18} /> Демо
               </Button>
             </div>
+            <a
+              href="#"
+              title="Скоро в RuStore"
+              className="inline-flex items-center gap-3 px-5 py-3 border border-border/60 hover:border-primary/60 bg-card/60 hover:bg-card transition-all clip-tech group w-fit"
+            >
+              <div className="w-9 h-9 flex items-center justify-center bg-[#1A1A2E] rounded-lg shrink-0">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 4h7v7H4V4Z" fill="#0088FF" />
+                  <path d="M13 4h7v7h-7V4Z" fill="#0088FF" opacity=".6" />
+                  <path d="M4 13h7v7H4v-7Z" fill="#0088FF" opacity=".6" />
+                  <path d="M13 13h7v7h-7v-7Z" fill="#0088FF" opacity=".3" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono leading-none mb-0.5">Скачать в</div>
+                <div className="font-display font-bold text-base leading-none group-hover:text-primary transition-colors">RuStore</div>
+              </div>
+              <span className="ml-2 text-[9px] font-mono text-yellow-400 border border-yellow-400/40 px-1.5 py-0.5 uppercase tracking-wider">Скоро</span>
+            </a>
             <div className="flex gap-8 pt-4">
               {[['1 240+', 'моделей узлов'], ['98%', 'точность подбора'], ['24/7', 'диагностика']].map(([v, l]) => (
                 <div key={l}>
