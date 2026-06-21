@@ -1,74 +1,31 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
+import AppHeader from '@/components/AppHeader';
+import CartDrawer from '@/components/CartDrawer';
+import VinModal from '@/components/VinModal';
+import { HERO_IMG, UNITS, DIAGNOSTICS, STEPS, PARTS, CartItem, Part, statusColor, fmt } from '@/components/data';
 
-const HERO_IMG = 'https://cdn.poehali.dev/projects/010cdc45-b2f6-47e5-b9eb-221033457d47/files/f14278c0-5117-4493-a6bb-63444ef98724.jpg';
-
-const NAV = [
-  { id: 'catalog', label: 'Каталог' },
-  { id: 'diagnostics', label: 'Диагностика' },
-  { id: 'disassembly', label: 'Разборка' },
-  { id: 'parts', label: 'Запчасти' },
-];
-
-const UNITS = [
-  { name: 'Двигатель V6', code: 'ENG-V6-24', type: 'Авто', parts: 248, status: 'OK', icon: 'Cog' },
-  { name: 'КПП роботизированная', code: 'TRN-DSG-7', type: 'Авто', parts: 162, status: 'WARN', icon: 'Settings2' },
-  { name: 'Тормозная система', code: 'BRK-ABS-4', type: 'Авто', parts: 86, status: 'OK', icon: 'Disc3' },
-  { name: 'Подвеска передняя', code: 'SUS-FR-22', type: 'Мото', parts: 54, status: 'OK', icon: 'Waypoints' },
-  { name: 'Сцепление', code: 'CLT-MT-09', type: 'Мото', parts: 41, status: 'CRIT', icon: 'CircleDot' },
-  { name: 'Система впуска', code: 'INT-TBO-3', type: 'Авто', parts: 73, status: 'OK', icon: 'Wind' },
-];
-
-const DIAGNOSTICS = [
-  { label: 'Давление масла', value: 92, unit: '%', color: 'primary' },
-  { label: 'Ресурс ремня ГРМ', value: 64, unit: '%', color: 'primary' },
-  { label: 'Износ сцепления', value: 38, unit: '%', color: 'accent' },
-  { label: 'Температура агрегата', value: 78, unit: '%', color: 'primary' },
-];
-
-const STEPS = [
-  { n: 1, title: 'Снятие защитного кожуха', tool: 'Ключ Torx T30', time: '4 мин' },
-  { n: 2, title: 'Отключение разъёмов датчиков', tool: 'Съёмник фишек', time: '6 мин' },
-  { n: 3, title: 'Демонтаж навесного оборудования', tool: 'Головка 13 мм', time: '12 мин' },
-  { n: 4, title: 'Извлечение основного узла', tool: 'Подъёмная траверса', time: '15 мин' },
-];
-
-const PARTS = [
-  { name: 'Поршневая группа', code: 'PST-117', price: 12400 },
-  { name: 'Комплект ГРМ', code: 'TMG-204', price: 8750 },
-  { name: 'Сцепление в сборе', code: 'CLT-339', price: 15200 },
-  { name: 'Турбокомпрессор', code: 'TBO-051', price: 34900 },
-];
-
-const statusColor = (s: string) =>
-  s === 'OK' ? 'text-primary' : s === 'WARN' ? 'text-yellow-400' : 'text-destructive';
-
-type CartItem = { code: string; name: string; price: number; qty: number };
-
-const fmt = (n: number) => n.toLocaleString('ru-RU');
+function SectionHead({ tag, title, desc, align = 'center' }: { tag: string; title: string; desc: string; align?: 'center' | 'left' }) {
+  return (
+    <div className={align === 'center' ? 'text-center max-w-2xl mx-auto' : ''}>
+      <div className="font-mono text-xs text-primary uppercase tracking-widest mb-3">◢ {tag}</div>
+      <h2 className="font-display font-bold text-4xl uppercase">{title}</h2>
+      <p className="text-muted-foreground mt-3">{desc}</p>
+    </div>
+  );
+}
 
 export default function Index() {
   const [activeStep, setActiveStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [vinOpen, setVinOpen] = useState(false);
-  const [vin, setVin] = useState('');
-  const [vinResult, setVinResult] = useState<null | { found: boolean; car?: string; year?: string; parts?: typeof PARTS }>(null);
-
-  const searchByVin = () => {
-    if (!vin.trim()) return;
-    const found = vin.trim().length >= 5;
-    setVinResult(found
-      ? { found: true, car: 'Toyota Land Cruiser 200', year: '2018', parts: PARTS.slice(0, 3) }
-      : { found: false }
-    );
-  };
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
   const cartTotal = cartItems.reduce((s, i) => s + i.qty * i.price, 0);
 
-  const addToCart = (p: { code: string; name: string; price: number }) => {
+  const addToCart = (p: Part) => {
     setCartItems((prev) => {
       const ex = prev.find((i) => i.code === p.code);
       if (ex) return prev.map((i) => (i.code === p.code ? { ...i, qty: i.qty + 1 } : i));
@@ -87,39 +44,11 @@ export default function Index() {
 
   return (
     <div className="min-h-screen grid-bg">
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-border/60 backdrop-blur-xl bg-background/80">
-        <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground clip-tech">
-              <Icon name="Boxes" size={20} />
-            </div>
-            <span className="font-display font-bold text-xl tracking-widest">TORQ<span className="text-primary">3D</span></span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            {NAV.map((n) => (
-              <a key={n.id} href={`#${n.id}`} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors uppercase tracking-wider">
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <button
-            onClick={() => { setVinOpen(true); setVinResult(null); setVin(''); }}
-            className="hidden sm:flex items-center gap-2 px-3 py-2 border border-border hover:border-primary text-muted-foreground hover:text-primary text-sm font-mono uppercase tracking-wider transition-colors clip-tech"
-          >
-            <Icon name="ScanSearch" size={15} /> VIN-поиск
-          </button>
-          <Button variant="outline" onClick={() => setCartOpen(true)} className="relative border-primary/40 hover:border-primary gap-2">
-            <Icon name="ShoppingCart" size={16} />
-            <span className="font-mono">{cartCount}</span>
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-mono rounded-full">
-                {cartCount}
-              </span>
-            )}
-          </Button>
-        </div>
-      </header>
+      <AppHeader
+        cartCount={cartCount}
+        onCartOpen={() => setCartOpen(true)}
+        onVinOpen={() => setVinOpen(true)}
+      />
 
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-border/60">
@@ -342,160 +271,23 @@ export default function Index() {
         </div>
       </footer>
 
-      {/* VIN SEARCH MODAL */}
       {vinOpen && (
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-20 px-4">
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setVinOpen(false)} />
-          <div className="relative w-full max-w-xl bg-card border border-primary/40 border-glow clip-tech animate-fade-in-up">
-            <div className="flex items-center justify-between p-5 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Icon name="ScanSearch" size={18} className="text-primary" />
-                <span className="font-display font-bold uppercase tracking-widest">Поиск по VIN</span>
-              </div>
-              <button onClick={() => setVinOpen(false)} className="w-8 h-8 flex items-center justify-center border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
-                <Icon name="X" size={16} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-muted-foreground text-sm">Введите 17-значный VIN автомобиля или мотоцикла для автоматического подбора совместимых запчастей.</p>
-              <div className="flex gap-2">
-                <div className="flex-1 flex items-center gap-2 bg-background border border-border focus-within:border-primary px-4 py-3 clip-tech transition-colors">
-                  <Icon name="Hash" size={16} className="text-primary shrink-0" />
-                  <input
-                    value={vin}
-                    onChange={(e) => { setVin(e.target.value.toUpperCase()); setVinResult(null); }}
-                    onKeyDown={(e) => e.key === 'Enter' && searchByVin()}
-                    placeholder="XTA210990Y2763456"
-                    maxLength={17}
-                    className="bg-transparent flex-1 outline-none font-mono text-sm tracking-widest placeholder:text-muted-foreground/50 uppercase"
-                  />
-                  {vin && (
-                    <span className="font-mono text-[10px] text-muted-foreground shrink-0">{vin.length}/17</span>
-                  )}
-                </div>
-                <Button onClick={searchByVin} className="gap-2 font-display uppercase tracking-wider shrink-0">
-                  <Icon name="Search" size={15} /> Найти
-                </Button>
-              </div>
-
-              {vinResult && !vinResult.found && (
-                <div className="flex items-center gap-3 p-4 border border-destructive/40 bg-destructive/10 clip-tech text-sm">
-                  <Icon name="AlertCircle" size={16} className="text-destructive shrink-0" />
-                  <span>Автомобиль по данному VIN не найден. Проверьте правильность ввода.</span>
-                </div>
-              )}
-
-              {vinResult?.found && (
-                <div className="space-y-4 animate-fade-in-up">
-                  <div className="flex items-center gap-3 p-4 border border-primary/30 bg-primary/5 clip-tech">
-                    <Icon name="Car" size={18} className="text-primary shrink-0" />
-                    <div>
-                      <div className="font-display font-semibold">{vinResult.car}</div>
-                      <div className="font-mono text-xs text-muted-foreground">Год: {vinResult.year} · VIN: {vin}</div>
-                    </div>
-                    <span className="ml-auto text-xs font-mono text-primary bg-primary/10 px-2 py-1">● НАЙДЕН</span>
-                  </div>
-                  <div>
-                    <div className="font-mono text-xs text-muted-foreground uppercase tracking-widest mb-3">◢ Совместимые запчасти</div>
-                    <div className="space-y-2">
-                      {vinResult.parts?.map((p) => (
-                        <div key={p.code} className="flex items-center gap-3 p-3 bg-secondary/40 border border-border clip-tech">
-                          <Icon name="Cog" size={16} className="text-primary shrink-0" />
-                          <span className="flex-1 font-display text-sm">{p.name}</span>
-                          <span className="font-mono text-xs text-muted-foreground">{p.code}</span>
-                          <span className="font-display font-bold text-primary text-sm">{fmt(p.price)} ₽</span>
-                          <button
-                            onClick={() => { addToCart(p); setVinOpen(false); }}
-                            className="w-7 h-7 flex items-center justify-center bg-primary text-primary-foreground clip-tech hover:opacity-90 transition-opacity shrink-0"
-                          >
-                            <Icon name="Plus" size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <VinModal
+          onClose={() => setVinOpen(false)}
+          onAddToCart={addToCart}
+        />
       )}
 
-      {/* CART DRAWER */}
       {cartOpen && (
-        <div className="fixed inset-0 z-[60]">
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-fade-in-up" onClick={() => setCartOpen(false)} />
-          <aside className="absolute top-0 right-0 h-full w-full max-w-md bg-card border-l border-primary/30 border-glow flex flex-col" style={{ animation: 'fade-in-up 0.3s ease' }}>
-            <div className="flex items-center justify-between p-5 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Icon name="ShoppingCart" size={20} className="text-primary" />
-                <span className="font-display font-bold text-lg uppercase tracking-wider">Корзина</span>
-                <span className="font-mono text-xs text-muted-foreground">/ {cartCount} шт</span>
-              </div>
-              <button onClick={() => setCartOpen(false)} className="w-9 h-9 flex items-center justify-center border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
-                <Icon name="X" size={18} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
-              {cartItems.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-20">
-                  <Icon name="PackageOpen" size={48} className="text-primary/40 mb-4" />
-                  <p className="font-display uppercase tracking-wider">Корзина пуста</p>
-                  <p className="text-sm mt-1">Добавьте запчасти из каталога</p>
-                </div>
-              ) : (
-                cartItems.map((item) => (
-                  <div key={item.code} className="flex items-center gap-3 bg-secondary/40 border border-border clip-tech p-3">
-                    <div className="w-12 h-12 flex items-center justify-center bg-card text-primary clip-tech shrink-0">
-                      <Icon name="Cog" size={22} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-mono text-[10px] text-muted-foreground">{item.code}</div>
-                      <div className="font-display font-semibold text-sm truncate">{item.name}</div>
-                      <div className="text-primary font-mono text-sm">{fmt(item.price)} ₽</div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => changeQty(item.code, -1)} className="w-7 h-7 flex items-center justify-center border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
-                        <Icon name="Minus" size={14} />
-                      </button>
-                      <span className="font-mono text-sm w-5 text-center">{item.qty}</span>
-                      <button onClick={() => changeQty(item.code, 1)} className="w-7 h-7 flex items-center justify-center border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors">
-                        <Icon name="Plus" size={14} />
-                      </button>
-                      <button onClick={() => removeItem(item.code)} className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
-                        <Icon name="Trash2" size={15} />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cartItems.length > 0 && (
-              <div className="p-5 border-t border-border space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground uppercase tracking-wider text-sm">Итого</span>
-                  <span className="font-display font-bold text-2xl text-primary text-glow">{fmt(cartTotal)} ₽</span>
-                </div>
-                <Button className="w-full gap-2 font-display uppercase tracking-wider">
-                  <Icon name="CreditCard" size={16} /> Оформить заказ
-                </Button>
-              </div>
-            )}
-          </aside>
-        </div>
+        <CartDrawer
+          cartItems={cartItems}
+          cartCount={cartCount}
+          cartTotal={cartTotal}
+          onClose={() => setCartOpen(false)}
+          onChangeQty={changeQty}
+          onRemove={removeItem}
+        />
       )}
-    </div>
-  );
-}
-
-function SectionHead({ tag, title, desc, align = 'center' }: { tag: string; title: string; desc: string; align?: 'center' | 'left' }) {
-  return (
-    <div className={align === 'center' ? 'text-center max-w-2xl mx-auto' : ''}>
-      <div className="font-mono text-xs text-primary uppercase tracking-widest mb-3">◢ {tag}</div>
-      <h2 className="font-display font-bold text-4xl uppercase">{title}</h2>
-      <p className="text-muted-foreground mt-3">{desc}</p>
     </div>
   );
 }
